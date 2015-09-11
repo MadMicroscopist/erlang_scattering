@@ -1,15 +1,16 @@
 -module(main).
--export([start/1, counter/2, loop/0, stop/1]).
+-export([start/1, waiting/1, counter/2, loop/0, stop/1]).
 
 start(N_e) ->
-    register(server, self()),
+    register(server, spawn(main, waiting, [N_e])).
+
+waiting(N_e) ->
     spawn(main, counter, [N_e,[]]),
     receive
         {message, Msg} ->
-            io:format("Recieved message ~p", Msg);
+            io:format("Recieved message ~p~n", [Msg]);
         {stop, List} ->
-            List
-        after 1000 ->
+            io:format("Process list is ~p~n", [List]),
             unregister(server),
             ok
     end.
