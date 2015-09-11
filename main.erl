@@ -1,5 +1,6 @@
 -module(main).
 -export([start/1, waiting/1, counter/2, electron/1, watcher/0, stop/1]).
+-include("electron.hrl").
 
 %start simulation for N_e electrons
 start(N_e) ->
@@ -32,7 +33,8 @@ watcher() ->
         end.
 
 electron(Pid) ->
-    Pid ! {self(), "hello"}.
+    Electron = #electron{},
+    Pid ! {self(), Electron}.
 
 
 stop(List) ->
