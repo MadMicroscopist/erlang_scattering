@@ -34,7 +34,8 @@ watcher() ->
 
 electron(Pid) ->
     Electron = #electron{},
-    Pid ! {self(), Electron}.
+    NewElectron = electron:rotate(0.5, 0.7, Electron),
+    Pid ! {self(), NewElectron}.
 
 
 stop(List) ->
