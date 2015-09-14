@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+*.beam
+=======
 *.~*
 *.exe
 *.beam
 
+>>>>>>> 6a36eefe5f5b02fde745c7c8a44c42064bdaa382

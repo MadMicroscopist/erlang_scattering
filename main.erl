@@ -34,7 +34,8 @@ watcher() ->
 
 electron(Pid) ->
     Electron = #electron{},
-    Pid ! {self(), Electron}.
+    NewElectron = electron:scattering(Electron,10),
+    Pid ! {self(), NewElectron}.
 
 
 stop(List) ->
