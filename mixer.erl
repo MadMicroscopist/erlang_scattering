@@ -20,7 +20,7 @@ mixer3(Angle, List1, List) ->
     end.
 
 mixer4(Angle, {E, List2, S_full}) ->
-    lists:reverse([{erlang:list_to_float(E), full, erlang:list_to_float(S_full)}|mixer5(E, lists:zip(Angle, List2), [])]).
+    lists:reverse([{erlang:list_to_float(E), full, S_full}|mixer5(E, lists:zip(Angle, List2), [])]).
 
 mixer5(E, List3, List) ->
     case List3 of
