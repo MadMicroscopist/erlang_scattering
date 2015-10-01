@@ -35,7 +35,7 @@ fill_cs_table(FileName, Mode) ->
     %mixer:mixer(List). %function, wich makes a list of turples from list of lists.
     Normal_list = probability:calculate(mixer:mixer(List)),
     filling(Normal_list),
-    ok.
+    lists:reverse(tl(lists:reverse(Normal_list))).
 
 filling(List) ->
     case List of
