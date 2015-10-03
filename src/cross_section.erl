@@ -4,7 +4,7 @@
 fill_cs_table(FileName) -> fill_cs_table(FileName, read).
 
 read_file(Name, Mode) ->
-    {ok, Device} = file:open(Name, Mode),
+    {ok, Device} = file:open("../data/"++Name, Mode),
     read_each_line(Device, []).
 
 read_each_line(Device, Accum) ->

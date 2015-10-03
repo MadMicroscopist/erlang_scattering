@@ -1,3 +1,6 @@
 *.~*
 *.exe
 *.beam
+.eunit
+.rebar
+ebin/scattering.app
