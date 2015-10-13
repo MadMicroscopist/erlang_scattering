@@ -27,11 +27,19 @@ search_value(List, Value, A0, V0) ->
 
 %% function for case of middle value
 search_value_1(Min, Max, Value, Energy) ->
-    A = search_value(Min, Value, 0, 0),
-    B = search_value(Max, Value, 0, 0),
-    {MinE, _, _} = hd(Min),
-    {MaxE, _, _} = hd(Max),
-    middle(A, MinE, B, MaxE, Energy).
+    case Value of
+        full ->
+            {_, _, A1} = lists:last(Min),
+            A  =list_to_float(A1),
+            {_, _, B1} = lists:last(Max),
+            B = list_to_float(B1);
+        _Other ->
+            A = search_value(Min, Value, 0, 0),
+            B = search_value(Max, Value, 0, 0)
+        end,
+        {MinE, _, _} = hd(Min),
+        {MaxE, _, _} = hd(Max),
+        middle(A, MinE, B, MaxE, Energy).
 
 middle(Angle_min, Value_min, Angle_max, Value_max, Value) ->
     (Value*(Angle_max - Angle_min) + Angle_min*Value_max - Angle_max*Value_min)/(Value_max-Value_min).

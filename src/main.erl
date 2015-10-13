@@ -1,13 +1,13 @@
 -module(main).
--export([start/1, waiting/1, counter/2, electron/1, watcher/0, stop/1]).
+-export([start/2, waiting/2, counter/3, watcher/1, electron/2]).
 -include("electron.hrl").
 
 %start simulation for N_e electrons
-start(N_e) ->
-    register(server, spawn(main, waiting, [N_e])).
+start(N_e, Material) ->
+    register(server, spawn(main, waiting, [N_e, Material])).
 
-waiting(N_e) ->
-    spawn(main, counter, [N_e,[]]),
+waiting(N_e, Material) ->
+    spawn(main, counter, [N_e,[], Material]),
     receive
         {stop, List} ->
             io:format("Spawned ~p~n", [List]),
@@ -17,14 +17,14 @@ waiting(N_e) ->
             _Message
     end.
 
-counter(0, List) ->
+counter(0, List, _Material) ->
     stop(List);
-counter(N_e, List) ->
-    Pid = spawn(main, watcher, []),
-    counter(N_e-1, [{N_e, Pid}|List]).
+counter(N_e, List, Material) ->
+    Pid = spawn(main, watcher, [Material]),
+    counter(N_e-1, [{N_e, Pid}|List], Material).
 
-watcher() ->
-    spawn(main, electron, [self()]),
+watcher(Material) ->
+    spawn(main, electron, [self(), Material]),
     receive
         {Pid, Msg} ->
             io:format("Message ~p received from ~p~n", [Msg, Pid]);
@@ -32,9 +32,12 @@ watcher() ->
             _Other
         end.
 
-electron(Pid) ->
+electron(Pid, Material) ->
     Electron = #electron{},
-    NewElectron = electron:scattering(Electron,10),
+    M = cross_section:fill_cs_table("eMcs" ++ Material++ ".dat"),
+    Mat = material:choise(Material),
+    NewElectron = electron:scattering(Electron, 10, M, Mat),
+    %NewElectron = {1.0e3, 0.75, searcher:search(1.0e3, 0.75, cross_section:fill_cs_table("eMcsAl.dat"))},
     Pid ! {self(), NewElectron}.
 
 

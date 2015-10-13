@@ -1,15 +1,17 @@
 -module(electron).
--export([scattering/2]).
+-export([scattering/4]).
 -include("electron.hrl").
 
-scattering(Electron, Counter) ->
+scattering(Electron, Counter, Material, Mat) ->
     %instant state of scattering angles and step lenght are taken by random number generation
     seed_random(),
-    Theta = 3.14159*get_random(),
-    Phi = 2*3.14159*get_random() - 3.14159,
-    Lenght = 10*get_random(),
+    Theta = math:pi()*searcher:search(Electron#electron.el_energy, get_random(), Material)/180.0,
+    Phi = 2*math:pi()*get_random() - math:pi(),
+    Full_cs = searcher:search(Electron#electron.el_energy, full, Material),
+    Mean_Lenght = Mat#material.mat_atom_weight/(6.02214129e23*Mat#material.mat_density*Full_cs), %mean free path length for this energy in this material [cm]
+    Lenght = -Mean_Lenght*math:log(get_random()),
     %scattering evaluation
-    New2 = step(Lenght, rotate(Theta, Phi, Electron)),
+    New2 = step(Lenght, rotate(Theta, Phi, Electron), Mat),
     %scattering result observation
     case New2#electron.el_flag of
         bse ->                              %if electron flag in scattering act was changed to bse, return current state and message about x and y coordinates of its exit point
@@ -17,7 +19,7 @@ scattering(Electron, Counter) ->
             New2;
         primary when Counter > 0 ->         %if electron flag save the same value, print its current stage and evaluate call of scattering function from curren electron state
             io:format("Scattering result is ~p~n", [New2]),
-            scattering(New2, Counter-1);
+            scattering(New2, Counter-1, Material, Mat);
         _Other ->                           %if any other state was received, return current electron state. It's place for error handler.
             New2
     end.
@@ -43,7 +45,7 @@ rotate(Theta, Phi, Electron) ->
 
     Electron#electron{el_r_matrix = {E1,E2,E3,E4,E5,E6,E7,E8,E9}}.
 
-step(Lenght, Electron) ->
+step(Lenght, Electron, Mat) ->
     Z_temp = element(9,Electron#electron.el_r_matrix)*Lenght + Electron#electron.el_z_coor,     %calculation of temporary electron Z coordinate
     case (Z_temp =< 0) of
         true when Electron#electron.el_z_coor>0 ->   %if Z will negative and its previous sate was positive (its not first scattering), cut electron trajectory to 0 and recalculate corresponding step lenght
@@ -52,7 +54,9 @@ step(Lenght, Electron) ->
             NewX	= element(1, Electron#electron.el_xy_coor) + element(7, Electron#electron.el_r_matrix) * NewLenght,
             NewY	= element(2, Electron#electron.el_xy_coor) + element(8, Electron#electron.el_r_matrix) * NewLenght,
             NewFlag = bse,
-            Electron#electron{el_flag = NewFlag, el_z_coor = NewZ, el_xy_coor = {NewX, NewY}};
+            Delta_E = 7.85e4*((Mat#material.mat_atom_number*Mat#material.mat_density)/(Mat#material.mat_atom_weight*Electron#electron.el_energy*1.0e-3 ))*math:log((1.166*(Electron#electron.el_energy + 0.85*Mat#material.mat_MIP))/Mat#material.mat_MIP)*Lenght,
+            NewEnergy = Electron#electron.el_energy - Delta_E,
+            Electron#electron{el_energy = NewEnergy, el_flag = NewFlag, el_z_coor = NewZ, el_xy_coor = {NewX, NewY}};
         true ->     %this case means what electron's first scattering gives us backscattering
             NewFlag = bse,
             Electron#electron{el_flag = NewFlag};
@@ -60,13 +64,15 @@ step(Lenght, Electron) ->
             NewZ = Z_temp,
             NewX	= element(1, Electron#electron.el_xy_coor) + element(7, Electron#electron.el_r_matrix) * Lenght,
             NewY	= element(2, Electron#electron.el_xy_coor) + element(8, Electron#electron.el_r_matrix) * Lenght,
-            Electron#electron{el_z_coor = NewZ, el_xy_coor = {NewX, NewY}}
+            Delta_E = 7.85e4*((Mat#material.mat_atom_number*Mat#material.mat_density)/(Mat#material.mat_atom_weight*Electron#electron.el_energy*1.0e-3 ))*math:log((1.166*(Electron#electron.el_energy*1.0e-3 + 0.85*Mat#material.mat_MIP))/Mat#material.mat_MIP)*Lenght,
+            NewEnergy = Electron#electron.el_energy - Delta_E,
+            Electron#electron{el_energy = NewEnergy, el_z_coor = NewZ, el_xy_coor = {NewX, NewY}}
     end.
 %random number generation seed
 seed_random() ->
     random:seed(erlang:phash2([node()]),
 	              erlang:monotonic_time(),
 		      erlang:unique_integer()).
-%generate a float random number from 0 to 1.0              
+%generate a float random number from 0 to 1.0
 get_random() ->
     random:uniform().
