@@ -18,11 +18,17 @@ search_value(List, Value) ->
     search_value(List, Value, 0, 0).
 
 search_value(List, Value, A0, V0) ->
-    Temp = element(3, hd(List)),
-    case Temp < Value of
-        false when Temp == Value -> element(2, hd(List));
-        false -> middle(A0, V0, element(2, hd(List)), Temp, Value);
-        true  -> search_value(tl(List), Value, element(2, hd(List)), Temp)
+    case Value of
+        full ->
+            {_, _, A1} = lists:last(List),
+            list_to_float(A1);
+        _ ->
+            Temp = element(3, hd(List)),
+            case Temp < Value of
+                false when Temp == Value -> element(2, hd(List));
+                false -> middle(A0, V0, element(2, hd(List)), Temp, Value);
+                true  -> search_value(tl(List), Value, element(2, hd(List)), Temp)
+            end
     end.
 
 %% function for case of middle value
@@ -42,4 +48,5 @@ search_value_1(Min, Max, Value, Energy) ->
         middle(A, MinE, B, MaxE, Energy).
 
 middle(Angle_min, Value_min, Angle_max, Value_max, Value) ->
+    %DEBUG io:format("Amin = ~p, Vmin = ~p, Amax = ~p, Vmax = ~p, V = ~p~n", [Angle_min, Value_min, Angle_max, Value_max, Value]),
     (Value*(Angle_max - Angle_min) + Angle_min*Value_max - Angle_max*Value_min)/(Value_max-Value_min).

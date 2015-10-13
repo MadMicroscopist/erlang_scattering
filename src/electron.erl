@@ -1,8 +1,8 @@
 -module(electron).
--export([scattering/4]).
+-export([scattering/3]).
 -include("electron.hrl").
 
-scattering(Electron, Counter, Material, Mat) ->
+scattering(Electron, Material, Mat) ->
     %instant state of scattering angles and step lenght are taken by random number generation
     seed_random(),
     Theta = math:pi()*searcher:search(Electron#electron.el_energy, get_random(), Material)/180.0,
@@ -17,9 +17,9 @@ scattering(Electron, Counter, Material, Mat) ->
         bse ->                              %if electron flag in scattering act was changed to bse, return current state and message about x and y coordinates of its exit point
             io:format("Backscattering happens, exit coordinates are: x  ~p, y ~p~n", [element(1,New2#electron.el_xy_coor),element(2,New2#electron.el_xy_coor)]),
             New2;
-        primary when Counter > 0 ->         %if electron flag save the same value, print its current stage and evaluate call of scattering function from curren electron state
-            io:format("Scattering result is ~p~n", [New2]),
-            scattering(New2, Counter-1, Material, Mat);
+        primary ->         %if electron flag save the same value, print its current stage and evaluate call of scattering function from curren electron state
+            %io:format("Scattering result is ~p~n", [New2]),
+            scattering(New2, Material, Mat);
         _Other ->                           %if any other state was received, return current electron state. It's place for error handler.
             New2
     end.
@@ -54,19 +54,21 @@ step(Lenght, Electron, Mat) ->
             NewX	= element(1, Electron#electron.el_xy_coor) + element(7, Electron#electron.el_r_matrix) * NewLenght,
             NewY	= element(2, Electron#electron.el_xy_coor) + element(8, Electron#electron.el_r_matrix) * NewLenght,
             NewFlag = bse,
-            Delta_E = 7.85e4*((Mat#material.mat_atom_number*Mat#material.mat_density)/(Mat#material.mat_atom_weight*Electron#electron.el_energy*1.0e-3 ))*math:log((1.166*(Electron#electron.el_energy + 0.85*Mat#material.mat_MIP))/Mat#material.mat_MIP)*Lenght,
+            Delta_E = 7.85e7*((Mat#material.mat_atom_number*Mat#material.mat_density)/(Mat#material.mat_atom_weight*Electron#electron.el_energy*1.0e-3 ))*math:log((1.166*(Electron#electron.el_energy + 0.85*Mat#material.mat_MIP))/Mat#material.mat_MIP)*Lenght,
             NewEnergy = Electron#electron.el_energy - Delta_E,
             Electron#electron{el_energy = NewEnergy, el_flag = NewFlag, el_z_coor = NewZ, el_xy_coor = {NewX, NewY}};
         true ->     %this case means what electron's first scattering gives us backscattering
             NewFlag = bse,
             Electron#electron{el_flag = NewFlag};
-        false ->    %it's a usual scattering act without backscattering
+        false when Electron#electron.el_energy >= 50.0 ->    %it's a usual scattering act without backscattering
             NewZ = Z_temp,
             NewX	= element(1, Electron#electron.el_xy_coor) + element(7, Electron#electron.el_r_matrix) * Lenght,
             NewY	= element(2, Electron#electron.el_xy_coor) + element(8, Electron#electron.el_r_matrix) * Lenght,
-            Delta_E = 7.85e4*((Mat#material.mat_atom_number*Mat#material.mat_density)/(Mat#material.mat_atom_weight*Electron#electron.el_energy*1.0e-3 ))*math:log((1.166*(Electron#electron.el_energy*1.0e-3 + 0.85*Mat#material.mat_MIP))/Mat#material.mat_MIP)*Lenght,
+            Delta_E = 7.85e7*((Mat#material.mat_atom_number*Mat#material.mat_density)/(Mat#material.mat_atom_weight*Electron#electron.el_energy*1.0e-3 ))*math:log((1.166*(Electron#electron.el_energy*1.0e-3 + 0.85*Mat#material.mat_MIP))/Mat#material.mat_MIP)*Lenght,
             NewEnergy = Electron#electron.el_energy - Delta_E,
-            Electron#electron{el_energy = NewEnergy, el_z_coor = NewZ, el_xy_coor = {NewX, NewY}}
+            Electron#electron{el_energy = NewEnergy, el_z_coor = NewZ, el_xy_coor = {NewX, NewY}};
+        false ->                                            %it's a case of too low
+            Electron#electron{el_flag = stopped}
     end.
 %random number generation seed
 seed_random() ->
@@ -75,4 +77,8 @@ seed_random() ->
 		      erlang:unique_integer()).
 %generate a float random number from 0 to 1.0
 get_random() ->
-    random:uniform().
+    case A = try_random() of
+        0 -> get_random();
+        _A -> A
+    end.
+try_random() -> random:uniform().
