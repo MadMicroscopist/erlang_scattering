@@ -28,7 +28,7 @@ watcher(Material, Energy) ->
     receive
         {_Pid, {_, bse, _, _, {X,Y}, _ }} ->
             %io:format("BSE-message from coordinates of ~p received from ~p~n", [{X,Y}, Pid]),
-            write_file("../data/"++"test_write.dat", [read,write, append], [X, Y]);
+            write_to_file:write_file("../data/"++"test_write.dat", [read,write, append], [X, Y]);
         {_Pid, _Msg} ->
                 ok
         end.
@@ -44,8 +44,3 @@ electron(Pid, Material, Energy) ->
 
 stop(List) ->
     server ! {stop, List}.
-
-write_file(Name, Mode, Data) ->
-    {ok, Device} = file:open(Name, Mode),
-    io:format(Device, "~p~n", [Data]),
-    file:close(Device).

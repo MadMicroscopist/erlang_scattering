@@ -36,9 +36,9 @@ rotate(Theta, Phi, Electron) ->
     E1 = 	CC * element(1,Electron#electron.el_r_matrix) 	+ CS * element(1+3,Electron#electron.el_r_matrix) 	- S * element(1+6,Electron#electron.el_r_matrix),
     E4 = 	-S * element(1,Electron#electron.el_r_matrix) + Cp * element(1+3,Electron#electron.el_r_matrix),
     E7 =  	SC * element(1,Electron#electron.el_r_matrix) 	+ SS * element(1+3,Electron#electron.el_r_matrix) 	+ C * element(1+6,Electron#electron.el_r_matrix),
-    E2 = 	CC * element(2,Electron#electron.el_r_matrix) 	+ CS * element(2+3,Electron#electron.el_r_matrix) 	- S * element(3+6,Electron#electron.el_r_matrix),
+    E2 = 	CC * element(2,Electron#electron.el_r_matrix) 	+ CS * element(2+3,Electron#electron.el_r_matrix) 	- S * element(2+6,Electron#electron.el_r_matrix),
     E5 = 	-S * element(2,Electron#electron.el_r_matrix) + Cp * element(2+3,Electron#electron.el_r_matrix),
-    E8 =  	SC * element(2,Electron#electron.el_r_matrix) 	+ SS * element(2+3,Electron#electron.el_r_matrix) 	+ C * element(3+6,Electron#electron.el_r_matrix),
+    E8 =  	SC * element(2,Electron#electron.el_r_matrix) 	+ SS * element(2+3,Electron#electron.el_r_matrix) 	+ C * element(2+6,Electron#electron.el_r_matrix),
     E3 = 	CC * element(3,Electron#electron.el_r_matrix) 	+ CS * element(3+3,Electron#electron.el_r_matrix) 	- S * element(3+6,Electron#electron.el_r_matrix),
     E6 = 	-S * element(3,Electron#electron.el_r_matrix) + Cp * element(3+3,Electron#electron.el_r_matrix),
     E9 =  	SC * element(3,Electron#electron.el_r_matrix) 	+ SS * element(3+3,Electron#electron.el_r_matrix) 	+ C * element(3+6,Electron#electron.el_r_matrix),
@@ -66,6 +66,7 @@ step(Lenght, Electron, Mat) ->
             NewY	= element(2, Electron#electron.el_xy_coor) + element(8, Electron#electron.el_r_matrix) * Lenght,
             Delta_E = 7.85e7*((Mat#material.mat_atom_number*Mat#material.mat_density)/(Mat#material.mat_atom_weight*Electron#electron.el_energy*1.0e-3 ))*math:log((1.166*(Electron#electron.el_energy*1.0e-3 + 0.85*Mat#material.mat_MIP))/Mat#material.mat_MIP)*Lenght,
             NewEnergy = Electron#electron.el_energy - Delta_E,
+            %write_to_file:write_file("../data/"++"trajectory_write.dat", [read,write, append], [NewX, NewY, NewZ]),
             Electron#electron{el_energy = NewEnergy, el_z_coor = NewZ, el_xy_coor = {NewX, NewY}};
         false ->                                            %it's a case of too low
             Electron#electron{el_flag = stopped}
