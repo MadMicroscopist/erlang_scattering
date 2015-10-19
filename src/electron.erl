@@ -15,7 +15,7 @@ scattering(Electron, Material, Mat) ->
     %scattering result observation
     case New2#electron.el_flag of
         bse ->                              %if electron flag in scattering act was changed to bse, return current state and message about x and y coordinates of its exit point
-            io:format("Backscattering happens, exit coordinates are: x  ~p, y ~p~n", [element(1,New2#electron.el_xy_coor),element(2,New2#electron.el_xy_coor)]),
+            %DEBUG io:format("Backscattering happens, exit coordinates are: x  ~p, y ~p~n", [element(1,New2#electron.el_xy_coor),element(2,New2#electron.el_xy_coor)]),
             New2;
         primary ->         %if electron flag save the same value, print its current stage and evaluate call of scattering function from curren electron state
             %io:format("Scattering result is ~p~n", [New2]),

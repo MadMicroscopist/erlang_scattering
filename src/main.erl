@@ -9,8 +9,8 @@ start(N_e, Material, Energy) ->
 waiting(N_e, Material, Energy) ->
     spawn(main, counter, [N_e,[], Material, Energy]),
     receive
-        {stop, List} ->
-            io:format("Spawned ~p~n", [List]),
+        {stop, _List} ->
+            %io:format("Spawned ~p~n", [List]),
             unregister(server),
             ok;
         _Message ->
@@ -26,10 +26,11 @@ counter(N_e, List, Material, Energy) ->
 watcher(Material, Energy) ->
     spawn(main, electron, [self(), Material, Energy]),
     receive
-        {Pid, Msg} ->
-            io:format("Message ~p received from ~p~n", [Msg, Pid]);
-        _Other ->
-            _Other
+        {_Pid, {_, bse, _, _, {X,Y}, _ }} ->
+            %io:format("BSE-message from coordinates of ~p received from ~p~n", [{X,Y}, Pid]),
+            write_file("../data/"++"test_write.dat", [read,write, append], [X, Y]);
+        {_Pid, _Msg} ->
+                ok
         end.
 
 electron(Pid, Material, Energy) ->
@@ -43,3 +44,8 @@ electron(Pid, Material, Energy) ->
 
 stop(List) ->
     server ! {stop, List}.
+
+write_file(Name, Mode, Data) ->
+    {ok, Device} = file:open(Name, Mode),
+    io:format(Device, "~p~n", [Data]),
+    file:close(Device).
